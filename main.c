@@ -17,8 +17,19 @@
 // Um objeto representando um ponto
 typedef struct
 {
-    int x, y;
+    float x, y;
 } Ponto;
+
+void change(int **array, int length)
+{
+    free(*array);
+
+    *array = malloc(length * sizeof(int));
+    if (*array == NULL)
+        return;
+    for (int i = 0 ; i < length ; i++)
+        (*array)[i] = 1;
+}
 
 int main () {
 
@@ -29,24 +40,28 @@ int main () {
     char buffer[MAX_LENGTH];
     int linha = 0;
     int num_pontos = 0;
-    char delim[] = " ";
-    Ponto pontos[100];
+
+    num_pontos = atoi(fgets(buffer, MAX_LENGTH, in));
+    Ponto pontos[num_pontos];
 
     while (fgets(buffer, MAX_LENGTH, in)) {
-        if (linha == 0) {
-            num_pontos = atoi(buffer);
-        } else {
-            char *ptr = strtok(buffer, delim);
-            pontos[linha].x = atof(*ptr);
-            ptr = strtok(NULL, delim);
-            pontos[linha].y = atof(*ptr);
-            printf("ponto x: %i, ponto i: %i\n", pontos[linha].x, pontos[linha].y);
+        if (linha != 0) {
+            //char delim[] = " ";
+            //char linebr[] = "\n";
+            char *ptr = strtok(buffer, " ");
+            pontos[linha].x = atof(ptr);
+            ptr = strtok(NULL, " ");
+            char *ycoord = strtok(ptr, "\n");
+            pontos[linha].y = atof(ycoord);
+            printf("ponto x: %f, ponto i: %f\n", pontos[linha].x, pontos[linha].y);
         }
         linha++;
     }
 
     // fechar o arquivo
     fclose(in);
+
+
 
     return 0;
 }
