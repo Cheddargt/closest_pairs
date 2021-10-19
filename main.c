@@ -20,15 +20,45 @@ typedef struct
     float x, y;
 } Ponto;
 
-void change(int **array, int length)
+// ctrl + c, ctrl + v
+void insertionSort_x(Ponto arr[], int n)
 {
-    free(*array);
+    int i, j;
+    Ponto key;
+    for (i = 1; i < n; i++) {
+        key = arr[i];
+        j = i - 1;
 
-    *array = malloc(length * sizeof(int));
-    if (*array == NULL)
-        return;
-    for (int i = 0 ; i < length ; i++)
-        (*array)[i] = 1;
+        /* Move elements of arr[0..i-1], that are
+          greater than key, to one position ahead
+          of their current position */
+        // coordenadas em x
+        while (j >= 0 && arr[j].x > key.x) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = key;
+    }
+}
+
+void insertionSort_y(Ponto arr[], int n)
+{
+    int i, j;
+    Ponto key;
+    for (i = 1; i < n; i++) {
+        key = arr[i];
+        j = i - 1;
+
+        /* Move elements of arr[0..i-1], that are
+          greater than key, to one position ahead
+          of their current position */
+        // coordenadas em x
+        while (j >= 0 && arr[j].y > key.y) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = key;
+    }
 }
 
 int main () {
@@ -60,6 +90,13 @@ int main () {
 
     // fechar o arquivo
     fclose(in);
+
+    // mudar pra merge-sort
+    insertionSort_x(pontos, num_pontos);
+    printf("----------- insertion sort ------------");
+    for (int i = 0; i < num_pontos; i++) {
+        printf("ponto x: %f, ponto i: %f\n", pontos[i].x, pontos[i].y);
+    }
 
 
 
