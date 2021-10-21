@@ -7,6 +7,7 @@
 #include <float.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 // TODO: ler o input.txt
 
@@ -31,8 +32,10 @@ int compararX(const void* a, const void* b) {
     Ponto *p1 = (Ponto *) a;
     Ponto *p2 = (Ponto *) b;
     if(p1->x < p2->x) return(-1);
-    if(p1->x == p2->x) return(0);
-    if(p1->x > p2->x) return(1);
+    if(p1->x <= p2->x+0.0000001 && p1->y <= p2->y) {
+     return (-1);
+    }
+    else return(1);
 }
 
 int compararY(const void* a, const void* b) {
@@ -56,6 +59,11 @@ Dist distance(Ponto p1, Ponto p2)
 //Função que calcula a menor distância entre um array de pontos
 Dist closest(Ponto X[], Ponto Y[], int tamanho)
 {
+
+    if (tamanho == 1) {
+        getch();
+    }
+
     //Variáveis:
     Dist d; //É a distância que será retornado
     Dist d_esq; //Distância do lado esquerdo da divisão
@@ -64,8 +72,7 @@ Dist closest(Ponto X[], Ponto Y[], int tamanho)
     Ponto mid; //Variável que vai receber o ponto do meio onde faz a divisão pra direita e esquerda
 
     int meio = tamanho/2; //Metade do vetor
-    int impar = 0; //Flag pra saber se tamanho é ímpar
-
+    //int impar = 0; //Flag pra saber se tamanho é ímpar
 
     //Caso base:
     //Se tiver 2 pontos, apenas retorna a distancia entre eles
@@ -90,27 +97,39 @@ Dist closest(Ponto X[], Ponto Y[], int tamanho)
     }
 
     //Divisão:
-    //Pega o meio do vetor de ponto
-    if(tamanho%2 != 0){impar = 1;}//quando é ímpar
 
-    Ponto X_esq[meio+impar];
-    Ponto X_dir[meio];
+    Ponto X_esq[meio];
+    Ponto X_dir[tamanho-meio];
 
-    Ponto Y_esq[meio+impar];
-    Ponto Y_dir[meio];
+    Ponto Y_esq[meio];
+    Ponto Y_dir[tamanho-meio];
 
-    mid = X[meio+impar];
+    mid = X[meio-1];
 
-    for(int i=0; i<(meio+impar); i++) {X_esq[i] = X[i];}
-    for(int i=0; i<meio;i++){X_dir[i] = X[meio+impar+i];}
+    for(int i=0; i<meio; i++) {X_esq[i] = X[i];}
+    for(int i=meio; i<tamanho;i++){X_dir[i-meio] = X[i];}
 
-    for(int i=0; i<meio+impar;i++) {Y_esq[i] = Y[i];}
-    for(int i=0; i<meio;i++){Y_dir[i] = Y[meio+impar+i];}
+    int tam_esq = 0;
+    int tam_dir = 0;
 
-    int tam_esq = meio+impar;
-    int tam_dir = meio;
+    for (int i=0; i<tamanho; i++)
+    {
+        if (Y[i].x < mid.x-0.0000001)
+            Y_esq[tam_esq++] = Y[i];
+        else if (Y[i].x<=mid.x+0.0000001 && Y[i].y<mid.y-0.0000001)
+            Y_esq[tam_esq++] = Y[i];
+        else
+            Y_dir[tam_dir++] = Y[i];
+    }
+
+
+    if (tam_dir == 1 || tam_esq == 1) {
+        printf("erro");
+    }
     d_esq = closest(X_esq, Y_esq, tam_esq);//Lado esquerdo
     d_dir = closest(X_dir, Y_dir, tam_dir);//Lado direito
+
+
 
     //Pega menor distância entre os dois
     if(d_esq.d < d_dir.d)
@@ -127,9 +146,9 @@ Dist closest(Ponto X[], Ponto Y[], int tamanho)
 
     for(int i=0; i<tamanho; i++)
     {
-        if((Y->x >= mid.x-d.d)&&(Y->x <=  mid.x+d.d))
+        if((Y[i].x >= mid.x-d.d)&&(Y[i].x <=  mid.x+d.d))
         {
-            S[i] = Y[i];
+            S[s_size] = Y[i];
             s_size++;
         }
     }
@@ -148,12 +167,16 @@ Dist closest(Ponto X[], Ponto Y[], int tamanho)
     return (d);
 }
 
-int main () {
+int main (int argc, char *argv[]) {
 
     //Start no tempo de execução
+    clock_t start_closest, end_closest;
+    clock_t start_brute, end_brute;
+    float cpu_time_clo, cpu_time_bru;
+
     Dist menor_dist;
 
-    FILE *in=fopen("input.txt","r");
+    FILE *in=fopen(argv[1],"r");
 
     // ler linha por linha, máximo 256 bytes
     const unsigned MAX_LENGTH = 256;
@@ -166,8 +189,6 @@ int main () {
     Ponto pontos_ord_y[num_pontos];
 
     while (fgets(buffer, MAX_LENGTH, in)) {
-        //char delim[] = " ";
-        //char linebr[] = "\n";
         char *xcoord = strtok(buffer, " ");
         pontos_ord_x[linha].x = atof(xcoord);
         pontos_ord_y[linha].x = atof(xcoord);
@@ -175,14 +196,17 @@ int main () {
         char *ycoord = strtok(xcoord, "\n");
         pontos_ord_x[linha].y = atof(ycoord);
         pontos_ord_y[linha].y = atof(ycoord);
-        printf("ponto x: %f, ponto i: %f\n", pontos_ord_x[linha].x, pontos_ord_x[linha].y);
         linha++;
     }
 
     // fechar o arquivo
     fclose(in);
 
+    //Inicia o tempo de execução
+    start_closest = clock();
+
     //Ordena os pontos pela coordenada x e salva em um vetor X
+    //qsort(pontos_ord_x, num_pontos, sizeof(Ponto), compararY);
     qsort(pontos_ord_x, num_pontos, sizeof(Ponto), compararX);
 
     //Ordena os pontos pela coordenada y e salva em um vetor Y
@@ -191,10 +215,13 @@ int main () {
     //Chama a função que pega a menor distância
     menor_dist = closest(pontos_ord_x, pontos_ord_y, num_pontos);
 
-    //Para tempo de execução
+    //Parar tempo de execução
+    end_closest = clock();
+    cpu_time_clo = ((float) (end_closest - start_closest)) / CLOCKS_PER_SEC;
+
 
     //Printa saída (tempo distância x1 y1 x2 y2)
-    printf("tempo %f %f %f %f %f\n", menor_dist.d, menor_dist.p1.x, menor_dist.p1.y, menor_dist.p2.x, menor_dist.p2.y);
+    printf("%f %f %f %f %f %f\n", cpu_time_clo, menor_dist.d, menor_dist.p1.x, menor_dist.p1.y, menor_dist.p2.x, menor_dist.p2.y);
 
     return 0;
 }
